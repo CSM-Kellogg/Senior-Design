@@ -1,0 +1,6 @@
+Small drone struts
+
+diameter: 10 mm
+inner distance: 49.75 mm
+
+Need to drop system by some variable height (didnt measure) but likely minimum 30 mm

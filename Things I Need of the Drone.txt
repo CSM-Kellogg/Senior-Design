@@ -1,0 +1,22 @@
+- Longer range (longer antenna at both or transmitter end)
+- Point at a target and shine a light source
+	- Custom PWM input (flashing light)
+	- Resolution of target and camera
+	- Order a camera that can be set to record
+
+- Flight plans
+	- Ensure out-of-range works for some mission plan written to the pixhawk
+	- Work up from loiter to more complex flight paths
+	- Use both drones
+
+- Stop the drone if:
+	- The battery is too low
+
+
+
+
+
+Things for me: Make interface for gimbal and small drone
+Print interface for gimbal and regular drone
+
+Make software (per Nick's specifications) for programming flight paths into mission planner. If necessary, use the programming language accepted by ardupilot (which I believe to be LUA).

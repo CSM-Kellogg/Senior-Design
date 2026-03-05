@@ -1,0 +1,12 @@
+train: ./train/images
+val: ./valid/images
+
+nc: 1
+names: ['rubberband']
+
+roboflow:
+  workspace: rubberbandtest
+  project: rubberband
+  version: 3
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/rubberbandtest/rubberband/dataset/3

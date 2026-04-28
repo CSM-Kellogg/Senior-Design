@@ -1,0 +1,1 @@
+In short, the folder grouping should be fairly straightforward

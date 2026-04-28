@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gimbal Empirical Angle Test</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --marker-color: #ff4444;
+            --center-color: #ffffff;
+            --calibration-color: #00e676;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Input Controls Panel */
+        #controls-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            border: 1px solid #333;
+            max-width: 300px;
+        }
+
+        #controls-panel h3 {
+            margin-top: 0;
+            color: var(--center-color);
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+
+        .input-group input {
+            width: calc(100% - 16px);
+            padding: 6px;
+            background: #222;
+            border: 1px solid #444;
+            color: var(--text-color);
+            border-radius: 4px;
+        }
+
+        button#calculate-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--marker-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button#calculate-btn:hover {
+            background-color: #ff6666;
+        }
+
+        /* The Main Canvas for Markers */
+        #test-canvas {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* 1-Inch Calibration Marker (Bottom Right) */
+        #one-inch-marker {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--calibration-color),
+                var(--calibration-color) 2px,
+                transparent 2px,
+                transparent 4px
+            );
+            border-bottom: 2px solid var(--calibration-color);
+            text-align: center;
+            font-weight: bold;
+            color: var(--calibration-color);
+            line-height: 40px;
+            z-index: 90;
+        }
+        
+        #one-inch-marker::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: -5px;
+            height: 10px;
+            width: 2px;
+            background-color: var(--calibration-color);
+        }
+
+        #one-inch-marker::after {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: -5px;
+            height: 10px;
+            width: 2px;
+            background-color: var(--calibration-color);
+        }
+
+        #one-inch-text {
+            position: absolute;
+            bottom: 40px;
+            right: 0px;
+            font-size: 0.8em;
+            width: 100px;
+            text-align: right;
+            color: var(--calibration-color);
+        }
+
+        /* Instructions display on start */
+        #intro-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        #intro-overlay h1 { color: var(--marker-color); }
+        #intro-overlay p { max-width: 600px; line-height: 1.6; }
+        #close-intro {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #444;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="intro-overlay">
+        <h1>Gimbal Empirical Angle Test</h1>
+        <p>This tool creates tangent-projection markers for testing gimbal rotation accuracy.</p>
+        <p><strong>Setup:</strong> Input your screen's true physical diagonal measurement and the distance your gimbal sits from the screen. Press F11 for Fullscreen.</p>
+        <button id="close-intro">Start Test</button>
+    </div>
+
+    <div id="controls-panel">
+        <h3>Configuration</h3>
+
+        <div class="input-group">
+            <label>Physical Screen Diagonal (inches)</label>
+            <input type="number" id="monitor-diag-in" value="17.0" step="0.1">
+        </div>
+        
+        <div class="input-group">
+            <label><strong>Gimbal-to-Screen Distance</strong> (inches)</label>
+            <input type="number" id="gimbal-distance-in" value="12" step="0.5">
+        </div>
+
+        <button id="calculate-btn">Recalculate Markers</button>
+    </div>
+
+    <canvas id="test-canvas"></canvas>
+
+    <div id="one-inch-text">Reference (1 inch)</div>
+    <div id="one-inch-marker"></div>
+
+    <script>
+        const canvas = document.getElementById('test-canvas');
+        const ctx = canvas.getContext('2d');
+        const controlsPanel = document.getElementById('controls-panel');
+        const calculateBtn = document.getElementById('calculate-btn');
+        const inchMarker = document.getElementById('one-inch-marker');
+
+        // Set initial canvas size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            calculateAndDraw();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        calculateBtn.addEventListener('click', calculateAndDraw);
+        document.getElementById('close-intro').addEventListener('click', () => {
+            document.getElementById('intro-overlay').style.display = 'none';
+        });
+
+        function calculateAndDraw() {
+            // Get User Inputs
+            const screenDiagIn = parseFloat(document.getElementById('monitor-diag-in').value);
+            const gimbalDistanceIn = parseFloat(document.getElementById('gimbal-distance-in').value);
+
+            const screenWidthPx = window.innerWidth;
+            const screenHeightPx = window.innerHeight;
+
+            // --- Calculation Section ---
+
+            // 1. Calculate the diagonal of the screen in pixels using Pythagorean theorem
+            const screenDiagPx = Math.sqrt(Math.pow(screenWidthPx, 2) + Math.pow(screenHeightPx, 2));
+
+            // 2. Calculate Pixels Per Inch (PPI)
+            const ppi = screenDiagPx / screenDiagIn;
+
+            // 3. Set the 1-inch reference marker size
+            inchMarker.style.width = ppi + 'px';
+            inchMarker.style.height = (ppi * 0.1) + 'px'; // Height is 10% of width for proportion
+
+            // Clear the canvas
+            ctx.fillStyle = '#121212';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const centerX = screenWidthPx / 2;
+            const centerY = screenHeightPx / 2;
+
+            // --- Draw Center Marker (0 Degrees) ---
+            ctx.beginPath();
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, screenHeightPx);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#ffffff'; // White for center
+            ctx.stroke();
+
+            // Draw center point circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 15, 0, 2 * Math.PI);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+
+            ctx.fillStyle = '#121212'; // Black dot in the very center
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 4, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Label Center
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 24px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText('0° (CENTER)', centerX, centerY + 50);
+
+            // --- Draw Angled Markers ---
+            const markerAngles = [5, 10, 15, 20, 25, 30]; // Angles in degrees (one side)
+            ctx.lineWidth = 1;
+            ctx.font = '16px Segoe UI';
+
+            markerAngles.forEach(angle => {
+                // The geometry of the problem:
+                // We have a right triangle.
+                // Adjacent side (Base) = gimbalDistanceIn (R)
+                // Opposing side (Offset on screen) = Offset_In
+                // Angle = theta
+                //
+                // Tan(theta) = Offset_In / Base
+                // Offset_In = Base * Tan(theta)
+
+                const angleRad = angle * (Math.PI / 180); // Convert to Radians
+                const offsetIn = gimbalDistanceIn * Math.tan(angleRad);
+                const offsetPx = offsetIn * ppi;
+
+                // Only draw if the marker fits on the screen
+                if (offsetPx < centerX) {
+                    
+                    // Style setup
+                    ctx.strokeStyle = '#ff4444'; // Red markers
+                    ctx.fillStyle = '#e0e0e0'; // Text
+
+                    // Draw positive (Right) side marker
+                    const rightX = centerX + offsetPx;
+                    drawLineAndLabel(rightX, angle + '°', centerY, screenHeightPx);
+
+                    // Draw negative (Left) side marker
+                    const leftX = centerX - offsetPx;
+                    drawLineAndLabel(leftX, '-' + angle + '°', centerY, screenHeightPx);
+                }
+            });
+        }
+
+        // Helper function to draw the marker line and angle label
+        function drawLineAndLabel(x, label, centerY, totalHeight) {
+            // Draw a slightly broken line so we can still see the target area
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, centerY - 20); // Top section
+            ctx.moveTo(x, centerY + 20); // Bottom section
+            ctx.lineTo(x, totalHeight);
+            ctx.stroke();
+
+            // Draw label near the center line
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x, centerY - 30);
+        }
+    </script>
+</body>
+</html>

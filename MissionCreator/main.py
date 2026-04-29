@@ -30,7 +30,7 @@ if __name__ == "__main__":
     homeLoc = getHomeLoc(master)
 
     # Get ROI
-    rois = [m_gps(lat=39.75296849506914, long=-105.22807095363021, alt=0)]
+    rois = [m_gps(lat=39.7529734, long=-105.2280673, alt=1739.38)]
 
     # Get takeoff altitude
     takeoffAlt = int(input("Takeoff altitude: "))

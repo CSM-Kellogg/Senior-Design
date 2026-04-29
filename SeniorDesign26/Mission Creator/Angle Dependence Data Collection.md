@@ -15,3 +15,14 @@ Then, using markers on a flat wall at a known distance away, the PWM values for 
 | 5              | 1650             | 1565               |
 | 10             | 1750             | 1620               |
 | 15             | 1895             | 1675               |
+## Dimensions of the Gimbal
+[Exact servo used]([https://kstservos.com/pages/user-manual?srsltid=AfmBOoqP91b6VXVOMxmdrbiTc3z2eFhm8oLhEr9PWiZHAL9EmM0IaG4-](https://cdn.shopify.com/s/files/1/0570/1766/3541/files/DS215MGV3.0.pdf?v=1675060715)
+__Yaw__
+Servo arm: 15mm
+Connector: 48 mm
+InnerFrameRadius: (39 - 25 / 2) mm = 26.5 mm
+
+__Pitch__
+Servo arm: 15mm
+Connector: 42mm
+Frame radius: 18mm

@@ -3,8 +3,10 @@ Inputs: home location, region(s) of interest, desired radius (optional), desired
 """
 
 from pymavlink import mavutil
-from .m_types.gps import m_gps
+from m_types.gps import m_gps
 from math import asin, sqrt, sin, cos, tan, atan2, asin, pi
+
+from findAngle import PWMFromTheta2_pitch
 
 """
 homeLoc is the location of the home of the drone (from takeoff)
@@ -90,22 +92,28 @@ def findWaypointLoc(homeLoc: m_gps, ROIs: list[m_gps], radius: float, thetas: li
     return points
 
 """
+Gets the PWM value to set the pitch of the drone gimbal using the alt value in the m_gps object. Assumes the drone is already facing the target
+"""
+def getPitchPWM(currentLoc: m_gps, target: m_gps):
+    dist = distGPS(currentLoc, target)
+    Delta_alt = currentLoc.alt - target.alt # Should always be positive
+    
+    theta = atan2(Delta_alt, dist / 100)
+
+    print(theta * 180.0 / pi)
+
+    # Offset because the mount angle is at 45 degrees
+    theta += pi/4
+
+    return PWMFromTheta2_pitch(theta * 180.0 / pi)
+
+"""
 Returns distance between two gps points
 """
 def distGPS(a: m_gps, b: m_gps):
     D_lat = b.lat - a.lat
     D_long = b.long - a.long
     return 2*EARTH_RAD * asin( sqrt( sin(D_lat / 2)**2 + cos(a.lat) * cos(b.lat) * sin(D_long / 2)**2 ) )
-
-"""
-Find the pitch angle assuming the default position is -45 degrees
-"""
-def calcPitch(a: m_gps, b: m_gps):
-    d = distGPS(a, b)
-    theta_abs = atan2(a.alt - b.alt, d)
-    theta_cmd = theta_abs + Math.PI / 4.0
-
-    # Convert using emperical relation
 
 """
 Figure out the values to send to the servos for the specific gimbal I was given in order to point at some object
@@ -117,11 +125,13 @@ PWM12: Servo for yaw (not horizontal yaw) (low points right, high points left) D
 
 
 if __name__ == "__main__":
-    rois = [m_gps(5,5,5)]
-    locs = findWaypointLoc(m_gps(10, 10, 0), rois, 10, [pi/6.0, pi/4.0])
+    # rois = [m_gps(5,5,5)]
+    # locs = findWaypointLoc(m_gps(10, 10, 0), rois, 10, [pi/6.0, pi/4.0])
 
-    locRoiPairs = [(rois[i], locs[i]) for i in range(len(rois))]
+    # locRoiPairs = [(rois[i], locs[i]) for i in range(len(rois))]
 
-    commands = generateCommands(locRoiPairs, 10, 3)
+    # commands = generateCommands(locRoiPairs, 10, 3)
 
-    [print(i) for i in commands]
+    # [print(i) for i in commands]
+
+    print(getPitchPWM(m_gps(39.751996, -105.2268044, 1769), m_gps(39.7529734, -105.2280673, 1745.47)))

@@ -17,3 +17,5 @@ This is a obsidian vault containing information about the drone and general seni
 4. SOLIDWORKS Files
 	1. [[SOLIDWorks Directory]]
 	2. [[How to Modify]]
+
+### What is Done and What is Next

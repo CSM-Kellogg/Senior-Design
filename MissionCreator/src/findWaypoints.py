@@ -1,5 +1,8 @@
 """
 Inputs: home location, region(s) of interest, desired radius (optional), desired angle with horizontal plane
+
+example input:
+
 """
 
 from pymavlink import mavutil
@@ -44,7 +47,7 @@ def generateCommands(GPSPoints: list[tuple[m_gps, m_gps]]=None, takeoffAlt=20, d
             "p1": 0, "p2": 0, "p3": 0, "p4": 0, "lat": int(roi.lat * 1e7), "lon": int(roi.long * 1e7), "alt": -roi.alt
         }; commands.append(setROI) # Set ROI
 
-        # Point camera
+        # Point camera -- TODO
         setServo = {
 
         }; commands.append(setServo) # Set pitch angle
@@ -100,10 +103,10 @@ def getPitchPWM(currentLoc: m_gps, target: m_gps):
     
     theta = atan2(Delta_alt, dist / 100)
 
-    print(theta * 180.0 / pi)
+    # Offset because the mount angle is at 45 degrees, and higher angles point more vertical
+    theta = pi/4 - theta
 
-    # Offset because the mount angle is at 45 degrees
-    theta += pi/4
+    print(theta * 180.0 / pi)
 
     return PWMFromTheta2_pitch(theta * 180.0 / pi)
 

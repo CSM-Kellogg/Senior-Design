@@ -1,4 +1,4 @@
-from .m_types.gps import m_gps
+from .m_gps import m_gps
 from pymavlink import mavutil
 
 def getHomeLoc(master):

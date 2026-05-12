@@ -6,10 +6,10 @@ example input:
 """
 
 from pymavlink import mavutil
-from m_types.gps import m_gps
+from .m_gps import m_gps
 from math import asin, sqrt, sin, cos, tan, atan2, asin, pi
 
-from findAngle import PWMFromTheta2_pitch
+from .findAngle import PWMFromTheta2_pitch
 
 """
 homeLoc is the location of the home of the drone (from takeoff)

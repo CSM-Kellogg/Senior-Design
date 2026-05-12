@@ -1,1 +1,1 @@
-from .m_types import m_gps
+from .m_gps import m_gps
